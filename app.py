@@ -6,6 +6,7 @@ st.title("學生課堂報表處理工具")
 
 # Step 1: 上傳檔案
 st.header("步驟 1: 上傳 CSV 或 Excel 檔案")
+st.info("提示：如果使用 .xls 檔案，請考慮轉換為 .xlsx 以避免相容性問題。")
 uploaded_file = st.file_uploader("選擇您的檔案", type=["csv", "xls", "xlsx"])
 
 if uploaded_file is not None:
@@ -73,8 +74,8 @@ if uploaded_file is not None:
             st.download_button("下載最終 CSV", csv, "final_result.csv", "text/csv")
     
     except ImportError as e:
-        st.error(f"缺少必要套件：{str(e)}。請確認 requirements.txt 中有 'xlrd' (針對 .xls) 或 'openpyxl' (針對 .xlsx)，並重新部署應用程式。檢查應用程式日誌以獲取更多細節。")
+        st.error(f"缺少必要套件：{str(e)}。請嘗試將 Python 版本設為 3.12（在應用程式設定中），或將檔案轉換為 .xlsx。檢查應用程式日誌以獲取更多細節。")
     except ValueError as ve:
         st.error(str(ve))
     except Exception as e:
-        st.error(f"發生錯誤：{str(e)}。如果檔案是 .xls，請確保 'xlrd' 已安裝；如果是 .xlsx，請確保 'openpyxl' 已安裝。")
+        st.error(f"發生錯誤：{str(e)}。如果檔案是 .xls，請確保 Python 版本相容，或轉換為 .xlsx。")
