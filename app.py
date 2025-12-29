@@ -21,9 +21,13 @@ if uploaded_file is not None:
         else:
             raise ValueError("不支援的檔案類型。請上傳 CSV、XLS 或 XLSX 檔案。")
         
-        # 清理數據：移除以 '#' 開頭的行（如果存在）
+        # 修正欄位名稱（從 '學栍姓名' 改為 '學生姓名'）
         if '學栍姓名' in df.columns:
-            df = df[df['學栍姓名'].apply(lambda x: isinstance(x, str) and not x.startswith('#'))]
+            df = df.rename(columns={'學栍姓名': '學生姓名'})
+        
+        # 清理數據：移除以 '#' 開頭的行（如果存在）
+        if '學生姓名' in df.columns:
+            df = df[df['學生姓名'].apply(lambda x: isinstance(x, str) and not x.startswith('#'))]
         
         # 轉換日期格式
         df['上課日期'] = pd.to_datetime(df['上課日期'], errors='coerce')
@@ -96,7 +100,7 @@ if uploaded_file is not None:
                         total_hours = 0.0
                     
                     # 欄位F: 所有學生姓名 (唯一並以逗號分隔)
-                    students = ', '.join(group['學栍姓名'].unique())
+                    students = ', '.join(group['學生姓名'].unique())  # 更新為修正後的欄位名
                     
                     return pd.Series({
                         '老師': teacher,
