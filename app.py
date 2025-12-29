@@ -14,10 +14,10 @@ if uploaded_file is not None:
         # 根據檔案類型讀取數據
         file_name = uploaded_file.name.lower()
         if file_name.endswith('.csv'):
-            df = pd.read_csv(uploaded_file, encoding='utf-8-sig', index_col=0, on_bad_lines='skip', header=5)
+            df = pd.read_csv(uploaded_file, encoding='utf-8-sig', index_col=0, on_bad_lines='skip', header=0)  # 修正為 header=0 針對 CSV
         elif file_name.endswith(('.xls', '.xlsx')):
             engine = 'xlrd' if file_name.endswith('.xls') else 'openpyxl'
-            df = pd.read_excel(uploaded_file, index_col=0, header=5, engine=engine)
+            df = pd.read_excel(uploaded_file, index_col=0, header=5, engine=engine)  # 保持 header=5 針對 Excel
         else:
             raise ValueError("不支援的檔案類型。請上傳 CSV、XLS 或 XLSX 檔案。")
         
