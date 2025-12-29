@@ -6,7 +6,7 @@ st.title("學生課堂報表處理工具")
 
 # Step 1: 上傳檔案
 st.header("步驟 1: 上傳 CSV 或 Excel 檔案")
-uploaded_file = st.file_uploader("選擇您的檔案", type=["csv", "xlsx"])  # 移除 'xls' 以避免錯誤
+uploaded_file = st.file_uploader("選擇您的檔案", type=["csv", "xls", "xlsx"])
 
 if uploaded_file is not None:
     try:
@@ -14,8 +14,11 @@ if uploaded_file is not None:
         file_name = uploaded_file.name.lower()
         if file_name.endswith('.csv'):
             df = pd.read_csv(uploaded_file, encoding='utf-8-sig', index_col=0, on_bad_lines='skip', header=5)
-        elif file_name.endswith('.xlsx'):
-            df = pd.read_excel(uploaded_file, index_col=0, header=5, engine='openpyxl')
+        elif file_name.endswith(('.xls', '.xlsx')):
+            engine = 'xlrd' if file_name.endswith('.xls') else 'openpyxl'
+            df = pd.read_excel(uploaded_file, index_col=0, header=5, engine=engine)
+        else:
+            raise ValueError("不支援的檔案類型。請上傳 CSV、XLS 或 XLSX 檔案。")
         
         # 清理數據：移除以 '#' 開頭的行（如果存在）
         if '學栍姓名' in df.columns:
@@ -70,8 +73,8 @@ if uploaded_file is not None:
             st.download_button("下載最終 CSV", csv, "final_result.csv", "text/csv")
     
     except ImportError as e:
-        st.error(f"讀取檔案時發生錯誤：{str(e)}。請確保環境中安裝了必要的套件（如 openpyxl for .xlsx）。如果檔案是 .xls 格式，請轉換為 .xlsx。")
+        st.error(f"缺少必要套件：{str(e)}。請確認 requirements.txt 中有 'xlrd' (針對 .xls) 或 'openpyxl' (針對 .xlsx)，並重新部署應用程式。檢查應用程式日誌以獲取更多細節。")
+    except ValueError as ve:
+        st.error(str(ve))
     except Exception as e:
-        st.error(f"發生錯誤：{str(e)}")
-
-st.info("已更新代碼以移除 .xls 支援，並添加錯誤處理。如果您在 Streamlit Cloud 上運行，請在 requirements.txt 中添加 'openpyxl'。對於 .xls 檔案，請先轉換為 .xlsx 格式上傳。如果需要支援 .xls，請在 requirements.txt 添加 'xlrd'。")
+        st.error(f"發生錯誤：{str(e)}。如果檔案是 .xls，請確保 'xlrd' 已安裝；如果是 .xlsx，請確保 'openpyxl' 已安裝。")
