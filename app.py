@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, time
 
 st.title("學生課堂報表處理工具")
 
@@ -55,16 +55,68 @@ if uploaded_file is not None:
             
             # 儲存中間結果到 session_state
             st.session_state['df_processed'] = df_filtered
-            st.success("模板1 已應用！您可以繼續添加模板2或其他步驟。")
+            st.success("模板1 已應用！您可以繼續應用模板2。")
         
-        # Step 3: 後續模板（待擴展）
-        st.header("步驟 3: 應用後續模板（待討論）")
+        # Step 3: 應用模板2 - 群組班級樞紐表
+        st.header("步驟 3: 應用後續模板")
         if 'df_processed' in st.session_state:
-            if st.button("應用模板2: [請提供條件細節]"):
+            if st.button("應用模板2: 群組班級樞紐表"):
                 df_next = st.session_state['df_processed']
-                # 在這裡添加模板2的過濾邏輯...
-                st.dataframe(df_next)
-                st.success("模板2 已應用！")
+                
+                # 定義唯一班級的群組鍵
+                group_keys = ['分校', '老師', '上課日期', '時間', '星期', '年級', '班別']
+                
+                # 群組並聚合數據
+                def aggregate_group(group):
+                    # 欄位A: 老師 (取第一個，假設一致)
+                    teacher = group['老師'].iloc[0]
+                    
+                    # 欄位B: 分校 (取第一個)
+                    branch = group['分校'].iloc[0]
+                    
+                    # 欄位C: concat 老師/上課日期/時間/星期/年級/班別
+                    concat_str = f"{teacher}/{group['上課日期'].iloc[0].date()}/{group['時間'].iloc[0]}/{group['星期'].iloc[0]}/{group['年級'].iloc[0]}/{group['班別'].iloc[0]}"
+                    
+                    # 欄位D: duration - 解析時間為時間1 (開始) 和時間2 (結束)
+                    time_str = group['時間'].iloc[0]
+                    if '-' in time_str:
+                        start_time_str, end_time_str = time_str.split('-')
+                        time1 = datetime.strptime(start_time_str.strip(), '%H:%M').time()
+                        time2 = datetime.strptime(end_time_str.strip(), '%H:%M').time()
+                        duration = f"{time1.strftime('%H:%M')} - {time2.strftime('%H:%M')}"
+                    else:
+                        duration = time_str  # 如果格式異常，保留原值
+                    
+                    # 欄位E: total hour - 計算小時差
+                    if '-' in time_str:
+                        start_dt = datetime.strptime(start_time_str.strip(), '%H:%M')
+                        end_dt = datetime.strptime(end_time_str.strip(), '%H:%M')
+                        total_hours = (end_dt - start_dt).total_seconds() / 3600
+                    else:
+                        total_hours = 0.0
+                    
+                    # 欄位F: 所有學生姓名 (唯一並以逗號分隔)
+                    students = ', '.join(group['學栍姓名'].unique())
+                    
+                    return pd.Series({
+                        '老師': teacher,
+                        '分校': branch,
+                        'Concat': concat_str,
+                        'Duration': duration,
+                        'Total Hours': total_hours,
+                        'Students': students
+                    })
+                
+                # 應用群組聚合
+                df_grouped = df_next.groupby(group_keys).apply(aggregate_group).reset_index(drop=True)
+                
+                # 顯示結果
+                st.header("步驟 3: 模板2 - 群組班級結果")
+                st.dataframe(df_grouped)
+                
+                # 更新 session_state 以供後續使用
+                st.session_state['df_processed'] = df_grouped
+                st.success("模板2 已應用！已群組為唯一班級，並計算持續時間與總小時。")
         
         # 最終結果
         if 'df_processed' in st.session_state:
