@@ -99,8 +99,8 @@ if uploaded_file is not None:
                     else:
                         total_hours = 0.0
                     
-                    # 欄位F: 所有學生姓名 (唯一並以逗號分隔)
-                    students = ', '.join(group['學生姓名'].unique())  # 更新為修正後的欄位名
+                    # 欄位F: 所有學栍姓名 (唯一並以逗號分隔)
+                    students = ', '.join(group['學栍姓名'].unique())  # 更新為修正後的欄位名
                     
                     return pd.Series({
                         '老師': teacher,
